@@ -1,0 +1,20 @@
+{
+  "name": "forza-dashboard-server",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server/udpListener.js",
+    "dev": "nodemon --watch server --exec \"npm run build && node dist/server/udpListener.js\""
+  },
+  "dependencies": {
+    "dgram": "^1.0.1"
+  },
+  "devDependencies": {
+    "@types/blessed": "^0.1.25",
+    "@types/node": "^22.15.21",
+    "blessed": "^0.1.81",
+    "blessed-contrib": "^4.11.0",
+    "typescript": "^5.4.5"
+  }
+}
