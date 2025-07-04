@@ -18,7 +18,6 @@ Thumbs.db
 *.tsbuildinfo
 
 # Data and telemetry
-/data/
 
 # Misc
 .env
