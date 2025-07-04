@@ -37,6 +37,26 @@ A real-time telemetry dashboard for Forza Motorsport, built with Node.js and Typ
      DEBUG_MODE=full npm run start:server
      ```
 
+## Replay Mode
+
+To replay previously captured telemetry:
+
+1. **Run the replay script:**
+   ```bash
+   npm run replay
+   # or
+   node server/test/replayUdp.js
+   ```
+
+2. **Important:** When using replay mode, make sure to turn off capture mode in your configuration to avoid duplicate packet logging:
+   - Set `CAPTURE_MODE=false` in your environment
+   - Or comment out the capture logic in the server
+
+This is useful for:
+- Testing dashboard features without running Forza
+- Analyzing specific racing scenarios
+- Debugging telemetry processing
+
 ## Project Structure
 - `server/models/` — TypeScript classes for each telemetry group
 - `server/dataProcessing.ts` — UDP packet parsing and class mapping
@@ -55,3 +75,9 @@ A real-time telemetry dashboard for Forza Motorsport, built with Node.js and Typ
 ---
 
 Enjoy your live Forza dashboard!
+
+next:
+
+make mini sectors and report delta only at the conclusion of each mini sector. 
+
+subtract say, 400 RPM from whatever max RPM is, it doesn't seem like you can actually ever get to max RPM, just below it.

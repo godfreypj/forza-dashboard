@@ -7,7 +7,6 @@
 import fs from 'fs';
 import { VehicleStats } from './models/VehicleStats.js';
 import { LapStats } from './models/LapStats.js';
-import { PositionStats } from './models/PositionStats.js';
 import { GeneralStats } from './models/GeneralStats.js';
 
 function calculateMph(velocityX: number, velocityY: number, velocityZ: number): number {
@@ -24,7 +23,6 @@ export function parseDashPacket(buffer: Buffer) {
   return {
     general: new GeneralStats(buffer),
     lap: new LapStats(buffer),
-    position: new PositionStats(buffer),
     vehicle: new VehicleStats(buffer)
   };
 }

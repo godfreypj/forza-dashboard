@@ -5,7 +5,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server/udpListener.js",
-    "dev": "nodemon --watch server --exec \"npm run build && node dist/server/udpListener.js\""
+    "dev": "nodemon --watch server --exec \"npm run build && node dist/server/udpListener.js\"",
+    "replay": "node server/test/replayUdp.js"
   },
   "dependencies": {
     "dgram": "^1.0.1"

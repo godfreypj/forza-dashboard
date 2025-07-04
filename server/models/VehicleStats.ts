@@ -23,6 +23,19 @@ export class VehicleStats {
   power: number;
   torque: number;
   timestampMs: number;
+  racePosition: number;
+  currentLapTime: number;
+  currentRaceTime: number;
+  distance: number;
+  engineMaxRpm: number;
+  tireTempFL: number;
+  tireTempFR: number;
+  tireTempRL: number;
+  tireTempRR: number;
+  tireSlipAngleFL: number;
+  tireSlipAngleFR: number;
+  tireSlipAngleRL: number;
+  tireSlipAngleRR: number;
 
   constructor(buffer: Buffer) {
     if (buffer.length < 331) throw new Error('DASH packet too small');
@@ -51,5 +64,18 @@ export class VehicleStats {
       this.velocityZ * this.velocityZ
     ) * 2.23694;
     this.rpm = buffer.readFloatLE(16);
+    this.engineMaxRpm = buffer.readFloatLE(8);
+    this.racePosition = buffer.readUInt8(302);
+    this.currentLapTime = buffer.readFloatLE(292);
+    this.currentRaceTime = buffer.readFloatLE(296);
+    this.distance = buffer.readFloatLE(280);
+    this.tireTempFL = buffer.readFloatLE(256);
+    this.tireTempFR = buffer.readFloatLE(260);
+    this.tireTempRL = buffer.readFloatLE(264);
+    this.tireTempRR = buffer.readFloatLE(268);
+    this.tireSlipAngleFL = buffer.readFloatLE(164);
+    this.tireSlipAngleFR = buffer.readFloatLE(168);
+    this.tireSlipAngleRL = buffer.readFloatLE(172);
+    this.tireSlipAngleRR = buffer.readFloatLE(176);
   }
 }
