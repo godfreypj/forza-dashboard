@@ -9,7 +9,7 @@ const UDP_PORT = 9999;
 const UDP_HOST = '127.0.0.1';
 
 // --- PATH TO YOUR CAPTURE FILE ---
-const capturePath = '/home/philipgodfrey/dev/forza-dashboard/data/udp-packets.bin';
+const capturePath = path.resolve(process.cwd(), 'data/udp-packets.bin');
 
 // --- READ THE CAPTURED DATA ---
 const data = fs.readFileSync(capturePath);

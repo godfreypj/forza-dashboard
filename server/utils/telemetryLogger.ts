@@ -33,55 +33,30 @@ export function renderTelemetryState(state: any) {
   const vehicle = state.vehicle || {};
   const lap = state.lap || {};
 
-  // Projected lap delta calculation (normalized)
-  let projDelta = '';
-  const lapLength = LapStats.getLapLength();
-  const normalizedDistance = LapStats.getNormalizedDistance(vehicle.distance);
-  if (vehicle.currentLapTime > 0 && normalizedDistance > 0 && lap.bestLapTime > 0 && lapLength > 0) {
-    const projectedLapTime = (vehicle.currentLapTime / normalizedDistance) * lapLength;
-    const delta = projectedLapTime - lap.bestLapTime;
-    projDelta = (delta >= 0 ? '+' : '') + delta.toFixed(3) + 's';
-  } else {
-    projDelta = 'waiting for lap completion';
-  }
-
-  // Lap delta (current vs best)
-  let lapDelta = '';
-  if (lap.bestLapTime > 0 && vehicle.currentLapTime > 0) {
-    const delta = vehicle.currentLapTime - lap.bestLapTime;
-    lapDelta = (delta >= 0 ? '+' : '') + delta.toFixed(3) + 's';
-  }
-  // Lap consistency (stddev)
-  const lapConsistency = LapStats.getConsistency();
-  // Pace trend (last - first in history)
-  const paceTrend = LapStats.getPaceTrend();
-  let paceTrendStr = '';
-  if (LapStats.lapHistory.length > 1) {
-    paceTrendStr = paceTrend < 0 ? '↑' : (paceTrend > 0 ? '↓' : '→');
-  }
-
-  // Sector times and deltas
-  const sectorInfo = LapStats.getSectorDisplayInfo();
-  function formatSector(i: number) {
-    const info = sectorInfo[i];
+  // Mini sector and main sector delta display
+  const miniSectorInfo = LapStats.getMiniSectorDisplayInfo();
+  function formatMiniSector(i: number) {
+    const info = miniSectorInfo[i];
     let deltaStr = '';
-    if (info.delta !== null) {
+    if (info.delta !== 0) {
       deltaStr = ` (${info.delta >= 0 ? '+' : ''}${info.delta.toFixed(2)}s)`;
     }
-    return `S${i+1}: {bold}${info.time ? info.time.toFixed(2) : '--'}{/bold}${deltaStr}`;
+    return `mS${i+1}: {bold}${info.time ? info.time.toFixed(2) : '--'}{/bold}${deltaStr}`;
+  }
+  function formatMainSectorDelta(i: number) {
+    const delta = LapStats.getMainSectorDelta(i);
+    const sign = delta > 0 ? '+' : (delta < 0 ? '' : '');
+    return `ΔS${i+1}: {bold}${sign}${delta.toFixed(2)}s{/bold}`;
   }
 
-  // LapStats box (main view: lap, bestLapTime, lastLapTime, projDelta, consistency, trend, sectors)
+  // LapStats box (lap, bestLapTime, lastLapTime, main sector deltas only)
   lapBox.setContent(
     `lap: {bold}${lap.lap ?? ''}{/bold}\n` +
     `bestLapTime: {bold}${lap.bestLapTime ?? ''}{/bold}\n` +
     `lastLapTime: {bold}${lap.lastLapTime ?? ''}{/bold}\n` +
-    `projDelta: {bold}${projDelta}{/bold}\n` +
-    `consistency: {bold}${LapStats.getConsistency().toFixed(3)}{/bold}\n` +
-    `trend: {bold}${LapStats.lapHistory.length > 1 ? (LapStats.getPaceTrend() < 0 ? '↑' : (LapStats.getPaceTrend() > 0 ? '↓' : '→')) : ''}{/bold}\n` +
-    `${formatSector(0)}\n` +
-    `${formatSector(1)}\n` +
-    `${formatSector(2)}`
+    `${formatMainSectorDelta(0)}\n` +
+    `${formatMainSectorDelta(1)}\n` +
+    `${formatMainSectorDelta(2)}`
   );
 
   // Drivetrain lookup
@@ -151,6 +126,15 @@ export function renderTelemetryState(state: any) {
     for (const [k, v] of Object.entries(general)) debugContent += `  ${k}: ${v}\n`;
     debugContent += '\nLapStats:\n';
     for (const [k, v] of Object.entries(lap)) debugContent += `  ${k}: ${v}\n`;
+    // Mini sector times/deltas (compact)
+    debugContent += '\nMiniSectors (time/delta):\n';
+    for (let i = 0; i < 9; i += 3) {
+      const ms = miniSectorInfo.slice(i, i+3).map((info, j) => {
+        const idx = i + j;
+        return `mS${idx+1}: ${info.time ? info.time.toFixed(2) : '--'} (${info.delta >= 0 ? '+' : ''}${info.delta.toFixed(2)})`;
+      }).join('   ');
+      debugContent += ms + '\n';
+    }
     debugContent += '\nVehicleStats:\n';
     // Show all properties, split into three columns for better visibility
     const vehicleKeys = [

@@ -42,6 +42,16 @@ export class LapStats {
   static _currentSectorStartDistance: number = 0;
   static _currentSectorLength: number = 0;
 
+  // Mini sector logic
+  static miniSectorCount: number = 9; // 3 per sector
+  static currentMiniSectorTimes: number[] = Array(9).fill(0);
+  static bestMiniSectorTimes: number[] = Array(9).fill(Infinity);
+  static lastMiniSectorDeltas: number[] = Array(9).fill(0);
+  static lastMainSectorDeltas: number[] = Array(3).fill(0); // sum of completed mini sector deltas per sector
+  static miniSectorCrossTimes: number[] = Array(9).fill(0);
+  static _currentMiniSectorStartTime: number = 0;
+  static _currentMiniSector: number = 0;
+
   constructor(buffer: Buffer) {
     const rawLap = buffer.readUInt16LE(300);
     this.lap = rawLap;
@@ -65,29 +75,41 @@ export class LapStats {
     if (distance < 0) return;
 
     const sectorLen = LapStats.trackLength / LapStats.sectorCount;
+    const miniSectorLen = LapStats.trackLength / LapStats.miniSectorCount;
     const lapDistance = distance % LapStats.trackLength;
+    const currentMiniSector = Math.floor(lapDistance / miniSectorLen);
     const currentSector = Math.floor(lapDistance / sectorLen);
 
-    // Check for sector transitions
-    if (
-      lapDistance < LapStats.prevDistance && 
-      LapStats.prevDistance > sectorLen * (LapStats.sectorCount - 1)
-    ) {
-      // Save sector 3 if it wasn't saved yet
-      if (LapStats.sectorCrossTimes[2] === 0) {
-        const sectorTime = LapStats._lastLapTime - LapStats.sectorCrossTimes[1];
-        LapStats.currentSectorTimes[2] = sectorTime;
-        if (!LapStats._firstLapDone || sectorTime < LapStats.bestSectorTimes[2]) {
-          LapStats.bestSectorTimes[2] = sectorTime;
+    // Mini sector transition logic
+    if (LapStats._currentMiniSector !== currentMiniSector) {
+      // Only if not first packet
+      if (LapStats._currentMiniSector < LapStats.miniSectorCount && LapStats._currentMiniSectorStartTime > 0) {
+        const idx = LapStats._currentMiniSector;
+        const miniTime = lapTime - LapStats._currentMiniSectorStartTime;
+        LapStats.currentMiniSectorTimes[idx] = miniTime;
+        if (miniTime > 0 && (LapStats.bestMiniSectorTimes[idx] === Infinity || miniTime < LapStats.bestMiniSectorTimes[idx])) {
+          LapStats.bestMiniSectorTimes[idx] = miniTime;
         }
+        // Delta to PB for this mini sector
+        const delta = LapStats.bestMiniSectorTimes[idx] !== Infinity ? miniTime - LapStats.bestMiniSectorTimes[idx] : 0;
+        LapStats.lastMiniSectorDeltas[idx] = delta;
+        // Update main sector delta (sum of completed mini sector deltas for this sector)
+        const sectorIdx = Math.floor(idx / 3);
+        const startMini = sectorIdx * 3;
+        const endMini = idx % 3 === 2 ? idx + 1 : idx; // Only update at end of each mini sector
+        LapStats.lastMainSectorDeltas[sectorIdx] = LapStats.lastMiniSectorDeltas.slice(startMini, idx + 1).reduce((a, b) => a + b, 0);
       }
+      LapStats._currentMiniSectorStartTime = lapTime;
+      LapStats._currentMiniSector = currentMiniSector;
+    }
 
-      LapStats._firstLapDone = true;
-      LapStats.lastSectorTimes = [...LapStats.currentSectorTimes];
-      LapStats.currentSectorTimes = [0, 0, 0];
-      LapStats.sectorCrossTimes = [0, 0, 0];
-      LapStats._currentSectorStartTime = lapTime;
-      LapStats._currentSectorStartDistance = lapDistance;
+    // Lap reset logic (on lap completion)
+    if (lapDistance < LapStats.prevDistance && LapStats.prevDistance > LapStats.trackLength * 0.9) {
+      LapStats.currentMiniSectorTimes = Array(9).fill(0);
+      LapStats.lastMiniSectorDeltas = Array(9).fill(0);
+      LapStats.lastMainSectorDeltas = Array(3).fill(0);
+      LapStats._currentMiniSector = 0;
+      LapStats._currentMiniSectorStartTime = lapTime;
     }
 
     LapStats._lastLapTime = lapTime;
@@ -212,5 +234,18 @@ export class LapStats {
         delta: null
       };
     });
+  }
+
+  // Mini sector display info for dashboard
+  static getMiniSectorDisplayInfo() {
+    return Array.from({ length: LapStats.miniSectorCount }, (_, i) => ({
+      time: LapStats.currentMiniSectorTimes[i],
+      best: LapStats.bestMiniSectorTimes[i],
+      delta: LapStats.lastMiniSectorDeltas[i],
+    }));
+  }
+  // Main sector delta for dashboard (only updates at mini sector boundaries)
+  static getMainSectorDelta(sectorIdx: number) {
+    return LapStats.lastMainSectorDeltas[sectorIdx];
   }
 }
