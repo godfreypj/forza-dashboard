@@ -6,6 +6,12 @@ import path from 'path';
 
 // Car lookup cache
 let carLookup: Record<string, string> | null = null;
+/**
+ * Lookup the car name from cars.csv using the car ordinal.
+ * Caches the lookup table after first use.
+ * @param ordinal The car ordinal value from telemetry
+ * @returns The car name as a string, or the ordinal as string if not found
+ */
 function getCarName(ordinal: number): string {
   if (!carLookup) {
     carLookup = {};
@@ -24,6 +30,12 @@ function getCarName(ordinal: number): string {
 
 // Car class lookup cache
 let carClassLookup: Record<string, string> | null = null;
+/**
+ * Lookup the car class name from carClass.csv using the class ordinal.
+ * Caches the lookup table after first use.
+ * @param classOrdinal The car class ordinal value from telemetry
+ * @returns The car class name as a string, or the ordinal as string if not found
+ */
 function getCarClassName(classOrdinal: number): string {
   if (!carClassLookup) {
     carClassLookup = {};
@@ -38,6 +50,10 @@ function getCarClassName(classOrdinal: number): string {
   return carClassLookup[classOrdinal] || String(classOrdinal);
 }
 
+/**
+ * General session and car info for Forza DASH packets.
+ * Populates car and class names using lookup tables.
+ */
 export class GeneralStats {
   isRaceOn: boolean;
   engineIdleRpm: number;
@@ -49,6 +65,10 @@ export class GeneralStats {
   carName: string;
   carClassName: string;
 
+  /**
+   * Parse general stats from a Forza telemetry buffer.
+   * @param buffer The UDP packet buffer
+   */
   constructor(buffer: Buffer) {
     this.isRaceOn = buffer.readFloatLE(0) > 0;
     this.engineIdleRpm = buffer.readFloatLE(12);

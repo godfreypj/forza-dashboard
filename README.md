@@ -9,8 +9,16 @@ A real-time telemetry dashboard for Forza Motorsport, built with Node.js and Typ
   - **GeneralStats**: Session and car info (e.g. isRaceOn, carOrdinal, carClass)
   - **LapStats**: Per-lap stats (lap, bestLapTime, lastLapTime)
   - **VehicleStats**: Live vehicle data (speed, rpm, acceleration, gear, power, torque, etc)
+- **Advanced mini sector and sector delta logic** (see below)
 - Debug mode to view all raw attributes
 - Easy to extend and customize
+
+## Mini Sector Timing & Sector Delta
+
+- Each lap is divided into 3 sectors, and each sector is further divided into 3 mini sectors (9 mini sectors per lap).
+- The dashboard displays main sector deltas, which only update at the end of each mini sector and remain fixed between updates.
+- Mini sector times and deltas are available in debug mode for detailed analysis.
+- No projections or running/interpolated values are shown—deltas are only updated at discrete mini sector boundaries.
 
 ## Quick Start
 
@@ -62,22 +70,22 @@ This is useful for:
 - `server/dataProcessing.ts` — UDP packet parsing and class mapping
 - `server/udpListener.ts` — UDP server and dashboard entry point
 - `server/utils/telemetryLogger.ts` — Terminal dashboard UI (blessed)
+- `server/utils/sectors.ts` — Mini sector timing and delta logic
 - `data/` — Example car data, logs, and UDP packet captures
 
 ## Requirements
 - Node.js 18+
 - Forza Motorsport (UDP telemetry enabled)
 
-## Customization
-- Edit `server/utils/telemetryLogger.ts` to change the dashboard layout or add widgets.
-- Add new stats or telemetry fields by updating the model classes in `server/models/` and the dashboard code.
+## Customization & Extending
+- Mini sector logic is modularized in `server/utils/sectors.ts` for easy modification.
+- Dashboard formatting and logic can be extended by editing `server/utils/telemetryLogger.ts`.
+- Add new telemetry fields by updating the model classes in `server/models/`.
+
+> **Note:** The "Cylinders" value shown is taken directly from Forza's UDP telemetry and may not reflect the real engine cylinder count for all cars. For accurate data, cross-reference with your own car database.
 
 ---
 
 Enjoy your live Forza dashboard!
 
-next:
-
-make mini sectors and report delta only at the conclusion of each mini sector. 
-
-subtract say, 400 RPM from whatever max RPM is, it doesn't seem like you can actually ever get to max RPM, just below it.
+---

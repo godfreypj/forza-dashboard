@@ -1,10 +1,11 @@
 import dgram from 'dgram';
 import fs from 'fs';
+import path from 'path';
 import { parseDashPacket } from './dataProcessing.js';
 import { renderTelemetryState } from './utils/telemetryLogger.js';
 
 const PORT = 9999;
-const OUTPUT_PATH = '/home/philipgodfrey/dev/forza-dashboard/data/udp-packets.bin';
+const OUTPUT_PATH = path.resolve(__dirname, '../data/udp-packets.bin');
 const CAPTURE_MODE = process.env.CAPTURE_MODE === '1';
 
 const server = dgram.createSocket('udp4');

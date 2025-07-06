@@ -4,7 +4,6 @@
  *   mph = sqrt(x^2 + y^2 + z^2) * 2.23694
  */
 
-import fs from 'fs';
 import { VehicleStats } from './models/VehicleStats.js';
 import { LapStats } from './models/LapStats.js';
 import { GeneralStats } from './models/GeneralStats.js';

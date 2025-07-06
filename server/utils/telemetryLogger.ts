@@ -11,9 +11,11 @@ let lapBox: any = null;
 let carBox: any = null;
 let vehicleBox: any = null;
 let debugBox: any = null;
-let lastLapNumber: number | undefined = undefined;
-let lastLapStats: any = {};
 
+/**
+ * Set up the terminal dashboard UI using blessed and blessed-contrib.
+ * Initializes the main grid and all stat boxes.
+ */
 function setupDashboard() {
   screen = blessed.screen({ smartCSR: true, title: 'Forza Dashboard' });
   grid = new contrib.grid({ rows: 12, cols: 12, screen });
@@ -26,6 +28,10 @@ function setupDashboard() {
   screen.key(['escape', 'q', 'C-c'], () => process.exit(0));
 }
 
+/**
+ * Render the current telemetry state to the dashboard UI.
+ * @param state The parsed telemetry state object (general, vehicle, lap)
+ */
 export function renderTelemetryState(state: any) {
   if (!screen) setupDashboard();
   const debugMode = process.env.DEBUG_MODE === 'full';
@@ -35,6 +41,10 @@ export function renderTelemetryState(state: any) {
 
   // Mini sector and main sector delta display
   const miniSectorInfo = LapStats.getMiniSectorDisplayInfo();
+  /**
+   * Format a mini sector line for debug display.
+   * @param i Mini sector index
+   */
   function formatMiniSector(i: number) {
     const info = miniSectorInfo[i];
     let deltaStr = '';
@@ -43,6 +53,10 @@ export function renderTelemetryState(state: any) {
     }
     return `mS${i+1}: {bold}${info.time ? info.time.toFixed(2) : '--'}{/bold}${deltaStr}`;
   }
+  /**
+   * Format a main sector delta line for display.
+   * @param i Sector index
+   */
   function formatMainSectorDelta(i: number) {
     const delta = LapStats.getMainSectorDelta(i);
     const sign = delta > 0 ? '+' : (delta < 0 ? '' : '');
@@ -59,7 +73,10 @@ export function renderTelemetryState(state: any) {
     `${formatMainSectorDelta(2)}`
   );
 
-  // Drivetrain lookup
+  /**
+   * Get drivetrain name from value.
+   * @param val Drivetrain code
+   */
   function getDrivetrainName(val: number) {
     if (val === 0) return 'FWD';
     if (val === 1) return 'RWD';
@@ -75,7 +92,10 @@ export function renderTelemetryState(state: any) {
     `Cylinders: {bold}${general.numCylinders ?? ''}{/bold}`
   );
 
-  // Format race time as MM:SS.mmm
+  /**
+   * Format race time as MM:SS.mmm
+   * @param secs Race time in seconds
+   */
   function formatRaceTime(secs: number) {
     if (!secs || isNaN(secs)) return '';
     const m = Math.floor(secs / 60);
@@ -84,7 +104,7 @@ export function renderTelemetryState(state: any) {
     return `${m}:${s.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
   }
 
-  // RPM color: orange 88–93%, green 94–96%, red 97%+ (use background highlight for visibility)
+  // RPM color: orange 88–93%, green 94–96%, red 97%+
   let rpmStr = vehicle.rpm?.toFixed(0) ?? '';
   if (vehicle.engineMaxRpm) {
     const ratio = vehicle.rpm / vehicle.engineMaxRpm;
